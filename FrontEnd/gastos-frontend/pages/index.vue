@@ -1,142 +1,215 @@
-<template>
-  <div class="min-h-screen bg-gray-50">
-    <!-- Header -->
-    <AppHeader @create="handleCreate" />
-
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <!-- Stats Cards -->
-      <StatsCards
-        :total-expenses="expenses.length"
-        :total-amount="totalAmount"
-        :filtered-count="filteredExpenses.length"
-        class="mb-8"
-      />
-
-      <!-- Filters -->
-      <ExpenseFilters
-        v-model:search-term="searchTerm"
-        v-model:category-filter="categoryFilter"
-        class="mb-6"
-      />
-
-      <!-- Table -->
-      <ExpenseTable
-        :expenses="paginatedExpenses"
-        @create="handleCreate"
-        @edit="handleEdit"
-        @delete="handleDeleteConfirm"
-      />
-
-      <!-- Pagination -->
-      <div v-if="totalPages > 1" class="flex justify-center mt-6">
-        <UPagination
-          v-model="currentPage"
-          :page-count="totalPages"
-        />
-      </div>
-    </div>
-
-    <!-- Modal Create/Edit -->
-    <ExpenseModal
-      :is-open="isModalOpen"
-      :mode="modalMode"
-      :form-data="formData"
-      @close="closeModal"
-      @submit="handleSubmit"
-    />
-
-    <!-- Delete Confirmation -->
-    <DeleteConfirmation
-      :is-open="!!deleteId"
-      :loading="isDeleting"
-      @cancel="deleteId = null"
-      @confirm="confirmDelete"
-    />
-  </div>
-</template>
-
 <script setup lang="ts">
-import { ITEMS_PER_PAGE } from '~/utils/constants'
+import { onMounted, reactive, computed, ref } from 'vue'
+import { useExpenses } from '~/composables/useExpenses'
+import type { Expense } from '~/types/expense'
 
-// Composables
-const { expenses, addExpense, updateExpense, deleteExpense, totalAmount } = useExpenses()
-const { searchTerm, categoryFilter, filteredExpenses } = useFilters(expenses)
-const { isOpen: isModalOpen, mode: modalMode, formData, openModal, closeModal } = useModal()
+import type { TableColumn, DropdownMenuItem } from '@nuxt/ui'
+import { useClipboard } from '@vueuse/core'
+
+const { expenses, loading, error, fetchExpenses, addExpense } = useExpenses()
+
+const form = reactive<Omit<Expense, 'id'>>({
+	description: '',
+	amount: 0,
+	category: '',
+	date: ''
+})
+
+const formError = ref<string | null>(null)
+
+const validateForm = (): boolean => {
+	if (!form.description || !form.category || !form.date) {
+		formError.value = 'Todos los campos son obligatorios'
+		return false
+	}
+
+	if (form.amount <= 0) {
+		formError.value = 'El monto debe ser mayor a 0'
+		return false
+	}
+
+	formError.value = null
+	return true
+}
+
+const submit = async () => {
+	if (!validateForm()) return
+
+	try {
+		await addExpense(form)
+
+		Object.assign(form, {
+			description: '',
+			amount: 0,
+			category: '',
+			date: ''
+		})
+	} catch (err) {
+		formError.value = (err as Error).message
+	}
+}
+
+onMounted(async () => {
+	await fetchExpenses()
+})
+
+//Prueba de tabla
+interface User {
+	id: number
+	name: string
+	position: string
+	email: string
+	role: string
+}
+
 const toast = useToast()
+const { copy } = useClipboard()
 
-// Estado
-const currentPage = ref(1)
-const deleteId = ref<number | null>(null)
-const isDeleting = ref(false)
+const data = ref<User[]>([
+	{
+		id: 1,
+		name: 'Lindsay Walton',
+		position: 'Front-end Developer',
+		email: 'lindsay.walton@example.com',
+		role: 'Member'
+	},
+	{
+		id: 2,
+		name: 'Courtney Henry',
+		position: 'Designer',
+		email: 'courtney.henry@example.com',
+		role: 'Admin'
+	},
+	{
+		id: 3,
+		name: 'Tom Cook',
+		position: 'Director of Product',
+		email: 'tom.cook@example.com',
+		role: 'Member'
+	},
+	{
+		id: 4,
+		name: 'Whitney Francis',
+		position: 'Copywriter',
+		email: 'whitney.francis@example.com',
+		role: 'Admin'
+	},
+	{
+		id: 5,
+		name: 'Leonard Krasner',
+		position: 'Senior Designer',
+		email: 'leonard.krasner@example.com',
+		role: 'Owner'
+	},
+	{
+		id: 6,
+		name: 'Floyd Miles',
+		position: 'Principal Designer',
+		email: 'floyd.miles@example.com',
+		role: 'Member'
+	}
+])
 
-// Paginación
-const totalPages = computed(() => Math.ceil(filteredExpenses.value.length / ITEMS_PER_PAGE))
-const paginatedExpenses = computed(() => {
-  const start = (currentPage.value - 1) * ITEMS_PER_PAGE
-  const end = start + ITEMS_PER_PAGE
-  return filteredExpenses.value.slice(start, end)
-})
+const columns: TableColumn<User>[] = [
+	{
+		accessorKey: 'id',
+		header: 'ID'
+	},
+	{
+		accessorKey: 'name',
+		header: 'Name'
+	},
+	{
+		accessorKey: 'email',
+		header: 'Email'
+	},
+	{
+		accessorKey: 'role',
+		header: 'Role'
+	},
+	{
+		id: 'action'
+	}
+]
 
-// Handlers
-const handleCreate = () => {
-  openModal('create')
+function getDropdownActions(user: User): DropdownMenuItem[][] {
+	return [
+		[
+			{
+				label: 'Copy user Id',
+				icon: 'i-lucide-copy',
+				onSelect: () => {
+					copy(user.id.toString())
+
+					toast.add({
+						title: 'User ID copied to clipboard!',
+						color: 'success',
+						icon: 'i-lucide-circle-check'
+					})
+				}
+			}
+		],
+		[
+			{
+				label: 'Edit',
+				icon: 'i-lucide-edit'
+			},
+			{
+				label: 'Delete',
+				icon: 'i-lucide-trash',
+				color: 'error'
+			}
+		]
+	]
 }
-
-const handleEdit = (expense: any) => {
-  openModal('edit', expense)
-}
-
-const handleDeleteConfirm = (id: number) => {
-  deleteId.value = id
-}
-
-const handleSubmit = (data: any) => {
-  if (modalMode.value === 'create') {
-    const newExpense = {
-      ...data,
-      id: Date.now(),
-      amount: parseFloat(data.amount)
-    }
-    addExpense(newExpense)
-    toast.add({
-      title: 'Éxito',
-      description: 'Gasto creado exitosamente',
-      color: 'green'
-    })
-  } else {
-    updateExpense(data.id, {
-      ...data,
-      amount: parseFloat(data.amount)
-    })
-    toast.add({
-      title: 'Éxito',
-      description: 'Gasto actualizado exitosamente',
-      color: 'green'
-    })
-  }
-  closeModal()
-}
-
-const confirmDelete = async () => {
-  if (!deleteId.value) return
-  
-  isDeleting.value = true
-  
-  setTimeout(() => {
-    deleteExpense(deleteId.value!)
-    deleteId.value = null
-    isDeleting.value = false
-    
-    toast.add({
-      title: 'Eliminado',
-      description: 'Gasto eliminado exitosamente',
-      color: 'red'
-    })
-  }, 300)
-}
-
-// Reset page cuando cambian filtros
-watch([searchTerm, categoryFilter], () => {
-  currentPage.value = 1
-})
 </script>
+
+<template>
+	<div class="p-6 space-y-6">
+		<h1 class="text-2xl font-bold">Listado de Gastos</h1>
+
+		<!-- Formulario -->
+		<UCard>
+			<form class="grid grid-cols-1 md:grid-cols-2 gap-4" @submit.prevent="submit">
+				<UInput v-model="form.description" placeholder="Descripción" />
+				<UInput v-model.number="form.amount" type="number" placeholder="Monto" />
+				<UInput v-model="form.category" placeholder="Categoría" />
+				<UInput v-model="form.date" type="date" />
+
+				<div class="md:col-span-2">
+					<UButton type="submit">Agregar gasto</UButton>
+				</div>
+
+				<UAlert v-if="formError" color="red" :title="formError" />
+			</form>
+		</UCard>
+
+		<!-- Errores HTTP -->
+		<UAlert v-if="error" color="red" :title="error" />
+
+		<pre class="bg-gray-100 p-2 text-xs">{{ expenses }}</pre>
+
+		<!-- Tabla -->
+		<UTable :data="data" :columns="columns" class="flex-1">
+			<template #name-cell="{ row }">
+				<div class="flex items-center gap-3">
+					<UAvatar :src="`https://i.pravatar.cc/120?img=${row.original.id}`" size="lg"
+						:alt="`${row.original.name} avatar`" />
+					<div>
+						<p class="font-medium text-highlighted">
+							{{ row.original.name }}
+						</p>
+						<p>
+							{{ row.original.position }}
+						</p>
+					</div>
+				</div>
+			</template>
+			<template #action-cell="{ row }">
+				<UDropdownMenu :items="getDropdownActions(row.original)">
+					<UButton icon="i-lucide-ellipsis-vertical" color="neutral" variant="ghost" aria-label="Actions" />
+				</UDropdownMenu>
+			</template>
+		</UTable>
+	</div>
+</template>
