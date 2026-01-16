@@ -35,6 +35,7 @@ export class ExpensesController {
 
     @Delete(':id')
     remove(@Param('id') id: string) {
+        this.logger.log('Se ha accedido a eliminacion (DELETE /expenses/' + id + ')');
         return this.expensesService.remove(+id);
     }
 }

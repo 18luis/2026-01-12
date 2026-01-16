@@ -1,14 +1,36 @@
 <script setup lang="ts">
-import type { TableColumn, DropdownMenuItem } from '@nuxt/ui'
-import { useExpenses } from '~/composables/useExpenses'
-import type { Expense } from '~/types/expense'
-import { ref, reactive } from 'vue'
+import { useGastos } from '~/composables/useGastos'
+import type { Expense } from "~/types/expense"
 
-const { expenses, loading, error, fetchExpenses, addExpense } = useExpenses()
+const { gastos, loading, fetchGastos, deleteGasto } = useGastos()
 
-onMounted(fetchExpenses)
+const search = ref('')
+const category = ref('')
+const showDeleteModal = ref(false)
+const selectedId = ref<number | null>(null)
 
-const toast = useToast()
+const openModal = (id: number | string) => {
+	selectedId.value = Number(id)
+	showDeleteModal.value = true
+}
+
+const confirmDelete = () => {
+	if (selectedId.value === null) return
+
+	deleteGasto(selectedId.value)
+
+	showDeleteModal.value = false
+}
+
+const currentPage = ref(1)
+const totalPages = computed(() => Math.ceil(gastos.value.length / 5))
+const paginatedExpenses = computed(() => {
+	const start = (currentPage.value - 1) * 5
+	const end = start + 5
+	return gastos.value.slice(start, end)
+})
+
+onMounted(fetchGastos)
 
 const columns: TableColumn<Expense>[] = [
 	{
@@ -35,113 +57,43 @@ const columns: TableColumn<Expense>[] = [
 		id: 'action'
 	}
 ]
-
-const showAddModal = ref(false)
-
-const newExpense = reactive<Omit<Expense, 'id'>>({
-	description: '',
-	amount: 0,
-	category: '',
-	date: ''
-})
-
-function openAddModal() {
-	newExpense.description = ''
-	newExpense.amount = 0
-	newExpense.category = ''
-	newExpense.date = new Date().toISOString().slice(0, 10)
-	showAddModal.value = true
-}
-
-async function handleAddSubmit() {
-	try {
-		await addExpense({
-			description: newExpense.description,
-			amount: newExpense.amount,
-			category: newExpense.category,
-			date: newExpense.date
-		})
-		await fetchExpenses()
-		toast.add({
-			title: 'Gasto agregado',
-			color: 'success',
-			icon: 'i-lucide-circle-check'
-		})
-		showAddModal.value = false
-	} catch (err) {
-		toast.add({
-			title: 'Error al guardar el gasto',
-			color: 'error',
-			icon: 'i-lucide-circle-check'
-		})
-	}
-}
-
-function getDropdownActions(expense: Expense): DropdownMenuItem[][] {
-	return [
-		[
-			{
-				label: 'Agregar',
-				icon: 'i-lucide-diamond-plus',
-				onClick: () => openAddModal()
-			},
-			{
-				label: 'Editar',
-				icon: 'i-lucide-edit'
-			},
-			{
-				label: 'Eliminar',
-				icon: 'i-lucide-trash',
-				color: 'error'
-			}
-		]
-	]
-}
 </script>
 
 <template>
-	<div class="p-6 space-y-6">
-		<h1 class="text-2xl font-bold">Listado de Gastos</h1>
-
-		<!-- Tabla -->
-		<UTable :data="expenses" :columns="columns" class="flex-1">
-			<template #action-cell="{ row }">
-				<UDropdownMenu :items="getDropdownActions(row.original)">
-					<UButton icon="i-lucide-ellipsis-vertical" color="neutral" variant="ghost" aria-label="Actions" />
-				</UDropdownMenu>
-			</template>
-		</UTable>
-
-		<!-- Modal Agregar Gasto (UModal) -->
-		<UModal v-model:show="showAddModal" :fullscreen="false" class="max-w-lg">
-			<template #header>
-				<h2 class="text-lg font-semibold">Agregar Gasto</h2>
-			</template>
-			<div class="p-2">
-				<form @submit.prevent="handleAddSubmit" class="space-y-3">
-					<div>
-						<label class="block text-sm">Descripcion</label>
-						<input v-model="newExpense.description" required class="w-full border rounded px-2 py-1" />
-					</div>
-					<div>
-						<label class="block text-sm">Cantidad</label>
-						<input v-model.number="newExpense.amount" type="number" required
-							class="w-full border rounded px-2 py-1" />
-					</div>
-					<div>
-						<label class="block text-sm">Categoria</label>
-						<input v-model="newExpense.category" class="w-full border rounded px-2 py-1" />
-					</div>
-					<div>
-						<label class="block text-sm">Fecha</label>
-						<input v-model="newExpense.date" type="date" required class="w-full border rounded px-2 py-1" />
-					</div>
-					<div class="flex justify-end gap-2 mt-4">
-						<UButton type="button" variant="ghost" @click="showAddModal = false">Cancelar</UButton>
-						<UButton type="submit" color="primary">Guardar</UButton>
-					</div>
-				</form>
+	<div class="h-screen flex items-center justify-center p-4">
+		<UCard class="w-full max-w-6xl" variant="subtle">
+			<div class="flex justify-between mb-4">
+				<h1 class="text-xl font-semibold">Gastos</h1>
+				<UInput v-model="search" placeholder="Buscar gasto..." />
+				<USelect v-model="category" :options="['Alimentos', 'Servicios', 'Transporte']"
+					placeholder="Categoría" />
+				<NuxtLink to="/gastos/create">
+					<UButton icon="i-lucide-diamond-plus">Nuevo gasto</UButton>
+				</NuxtLink>
 			</div>
-		</UModal>
+
+			<UEmpty v-if="!loading && gastos.length === 0" icon="i-lucide-list" title="No hay gastos registrados"
+				description="Agrega uno nuevo" />
+
+			<!-- Tabla -->
+			<UTable v-if="gastos.length > 0" :data="paginatedExpenses" :loading="loading" :columns="columns" class="flex-1">
+				<template #action-cell="{ row }">
+					<div class="flex gap-5">
+						<NuxtLink :to="`/gastos/edit/${row.original.id}`">
+							<UButton icon="i-lucide-edit" />
+						</NuxtLink>
+
+						<UButton icon="i-lucide-trash" color="error" @click="openModal(row.original.id)" />
+					</div>
+				</template>
+			</UTable>
+
+			<!-- Pagination -->
+			<div v-if="totalPages > 1" class="flex justify-center mt-6">
+				<UPagination v-model:page="currentPage" :total="gastos.length" />
+			</div>
+
+			<ConfirmDelete v-model="showDeleteModal" @confirm="confirmDelete" />
+		</UCard>
 	</div>
 </template>
