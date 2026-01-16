@@ -5,6 +5,7 @@ export const useGastos = () => {
     const api = useApi()
 
     const gastos = ref<Expense[]>([])
+    const gasto = ref<Expense | null>(null)
     const loading = ref(false)
     const error = ref<string | null>(null)
     const toast = useToast()
@@ -24,6 +25,26 @@ export const useGastos = () => {
                 icon: 'i-lucide-circle-check'
             })
             error.value = 'Error al cargar los gastos'
+        } finally {
+            loading.value = false
+        }
+    }
+
+    const fetchGasto = async (id: number) => {
+        loading.value = true
+        error.value = null
+
+        try {
+
+            gasto.value = await api<Expense>(`/expenses/${id}`)
+
+        } catch (err) {
+            toast.add({
+                title: 'Error al cargar el gasto',
+                color: 'error',
+                icon: 'i-lucide-circle-check'
+            })
+            error.value = 'Error al cargar el gasto'
         } finally {
             loading.value = false
         }
@@ -59,6 +80,36 @@ export const useGastos = () => {
         }
     }
 
+    const editGasto = async (id: number, data: Expense) => {
+        loading.value = true
+        error.value = null
+
+        try {
+
+            await api<Expense>(`/expenses/${id}`, {
+                method: 'PUT',
+                body: data
+            })
+            toast.add({
+                title: 'Gasto editado correctamente',
+                color: 'success',
+                icon: 'i-lucide-circle-check'
+            })
+
+            navigateTo('/')
+
+        } catch (err) {
+            toast.add({
+                title: 'Error al editar el gasto',
+                color: 'error',
+                icon: 'i-lucide-circle-check'
+            })
+            error.value = 'Error al editar el gasto'
+        } finally {
+            loading.value = false
+        }
+    }
+
     const deleteGasto = async (id: number) => {
         loading.value = true
         error.value = null
@@ -89,5 +140,5 @@ export const useGastos = () => {
         }
     }
 
-    return { gastos, loading, fetchGastos, createGasto, deleteGasto }
+    return { gastos, gasto, loading, fetchGastos, fetchGasto, createGasto, editGasto, deleteGasto }
 }

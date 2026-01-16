@@ -23,6 +23,12 @@ export class ExpensesController {
         return this.expensesService.findAll();
     }
 
+    @Get(':id')
+    findOne(@Param('id') id: string) {
+        this.logger.log('Se ha accedido a un gasto específico (GET /expenses/' + id + ')');
+        return this.expensesService.findOne(+id);
+    }
+
     @Post()
     create(@Body() createUserDto: CreateExpenseDto) {
         return this.expensesService.create(createUserDto);

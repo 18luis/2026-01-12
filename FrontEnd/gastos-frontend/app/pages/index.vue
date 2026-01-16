@@ -30,6 +30,12 @@ const paginatedExpenses = computed(() => {
 	return gastos.value.slice(start, end)
 })
 
+watch(gastos, () => {
+	if (currentPage.value > totalPages.value) {
+		currentPage.value = totalPages.value || 1
+	}
+})
+
 onMounted(fetchGastos)
 
 const columns: TableColumn<Expense>[] = [
@@ -51,7 +57,10 @@ const columns: TableColumn<Expense>[] = [
 	},
 	{
 		accessorKey: 'date',
-		header: 'Fecha'
+		header: 'Fecha',
+		cell: ({ row }) => {
+			return new Date(row.original.date).toISOString().split('T')[0]
+		}
 	},
 	{
 		id: 'action'
@@ -64,9 +73,6 @@ const columns: TableColumn<Expense>[] = [
 		<UCard class="w-full max-w-6xl" variant="subtle">
 			<div class="flex justify-between mb-4">
 				<h1 class="text-xl font-semibold">Gastos</h1>
-				<UInput v-model="search" placeholder="Buscar gasto..." />
-				<USelect v-model="category" :options="['Alimentos', 'Servicios', 'Transporte']"
-					placeholder="Categoría" />
 				<NuxtLink to="/gastos/create">
 					<UButton icon="i-lucide-diamond-plus">Nuevo gasto</UButton>
 				</NuxtLink>
@@ -76,7 +82,8 @@ const columns: TableColumn<Expense>[] = [
 				description="Agrega uno nuevo" />
 
 			<!-- Tabla -->
-			<UTable v-if="gastos.length > 0" :data="paginatedExpenses" :loading="loading" :columns="columns" class="flex-1">
+			<UTable v-if="gastos.length > 0" :data="paginatedExpenses" :loading="loading" :columns="columns"
+				class="flex-1">
 				<template #action-cell="{ row }">
 					<div class="flex gap-5">
 						<NuxtLink :to="`/gastos/edit/${row.original.id}`">
@@ -90,7 +97,7 @@ const columns: TableColumn<Expense>[] = [
 
 			<!-- Pagination -->
 			<div v-if="totalPages > 1" class="flex justify-center mt-6">
-				<UPagination v-model:page="currentPage" :total="gastos.length" />
+				<UPagination v-model:page="currentPage" :total="totalPages" />
 			</div>
 
 			<ConfirmDelete v-model="showDeleteModal" @confirm="confirmDelete" />
