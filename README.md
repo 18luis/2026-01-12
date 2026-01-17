@@ -121,7 +121,7 @@ Frontend
 http://localhost:3000
 
 Backend (API)
-http://localhost:3001
+http://localhost:8080
 
 
 (Las URLs pueden variar dependiendo de la configuración local o del despliegue en producción)
