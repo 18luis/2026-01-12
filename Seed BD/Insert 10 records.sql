@@ -1,3 +1,13 @@
+CREATE DATABASE expenses_db;
+
+CREATE TABLE expenses (
+    id BIGSERIAL PRIMARY KEY,
+    description TEXT NOT NULL,
+    amount NUMERIC(10,2) NOT NULL,
+    "date" TIMESTAMP NOT NULL,
+    category VARCHAR(50) NOT NULL
+);
+
 INSERT INTO expenses (description,amount,"date",category) VALUES
 	 ('Teclado',134.00,'2026-01-16 00:00:00','Oficina'),
 	 ('Recibos de agua',400.00,'2026-01-15 00:00:00','Servicios'),

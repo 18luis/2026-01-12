@@ -6,10 +6,10 @@ import { ExpensesModule } from './expenses/expenses.module';
   imports: [
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: 'localhost',
+      host: '//db.kiooskwyvuywuigryfjl.supabase.co',
       port: 5432,
       username: 'postgres',
-      password: 'postgres',
+      password: '$PassJIO26$%',
       database: 'expenses_db',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true, // Solo para desarrollo
