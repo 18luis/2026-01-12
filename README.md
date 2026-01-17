@@ -4,7 +4,7 @@
 
 ### 🌐 Frontend
 - **URL:**  
-  👉 https://frontend-nuxt-vercel-19g5b047n-luisitorobert1gmailcoms-projects.vercel.app/
+  👉 https://frontend-nuxt-vercel.vercel.app/
 
 ---
 
