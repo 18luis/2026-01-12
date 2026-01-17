@@ -21,6 +21,9 @@ jdbc:postgresql://aws-0-us-west-2.pooler.supabase.com:5432/postgres
 user=postgres.kiooskwyvuywuigryfjl
 password=[YOUR-PASSWORD]
 
+<img width="2553" height="1231" alt="image" src="https://github.com/user-attachments/assets/04f968d7-dcaa-4dd9-a137-d935755325b0" />
+
+
 El aplicativo se encuentra desplegado utilizando servicios en la nube, se uso Vercel para el FrontEnd, Railway para el BACKEND y Supabase para la BD
 
 📌 Descripción del proyecto
