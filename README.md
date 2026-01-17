@@ -24,6 +24,10 @@ password=[YOUR-PASSWORD]
 ![Texto alternativo](https://github.com/user-attachments/assets/04f968d7-dcaa-4dd9-a137-d935755325b0)
 <img width="2553" height="1231" alt="image" src="https://github.com/user-attachments/assets/04f968d7-dcaa-4dd9-a137-d935755325b0" />
 
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/04f968d7-dcaa-4dd9-a137-d935755325b0" alt="Arquitectura del sistema" width="700"/>
+</p>
+
 
 El aplicativo se encuentra desplegado utilizando servicios en la nube, se uso Vercel para el FrontEnd, Railway para el BACKEND y Supabase para la BD
 
