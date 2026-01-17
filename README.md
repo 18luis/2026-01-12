@@ -1,4 +1,28 @@
 💸 Gastos App
+
+## 🚀 Despliegue del Aplicativo
+
+### 🌐 Frontend
+- **URL:**  
+  👉 https://frontend-nuxt-vercel-19g5b047n-luisitorobert1gmailcoms-projects.vercel.app/
+
+---
+
+### 🛠️ Backend
+- **API Base URL:**  
+  👉 https://backendnestjsrailway-production.up.railway.app/api/expenses/
+
+---
+
+### 🗄️ Base de Datos
+- **Cadena de conexión (JDBC):**
+```txt
+jdbc:postgresql://aws-0-us-west-2.pooler.supabase.com:5432/postgres
+user=postgres.kiooskwyvuywuigryfjl
+password=[YOUR-PASSWORD]
+
+El aplicativo se encuentra desplegado utilizando servicios en la nube, se uso Vercel para el FrontEnd, Railway para el BACKEND y Supabase para la BD
+
 📌 Descripción del proyecto
 
 Aplicación web para la gestión de gastos, compuesta por un frontend y un backend, con una base de datos PostgreSQL desplegada en entorno local mediante Docker.
