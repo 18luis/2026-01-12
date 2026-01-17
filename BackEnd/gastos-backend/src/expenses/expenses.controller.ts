@@ -12,7 +12,7 @@ import { ExpensesService } from './expenses.service';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
 
-@Controller('expenses')
+@Controller('api/expenses')
 export class ExpensesController {
     private readonly logger = new Logger(ExpensesController.name);
     constructor(private readonly expensesService: ExpensesService) { }

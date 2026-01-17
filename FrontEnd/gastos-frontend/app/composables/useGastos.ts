@@ -16,7 +16,7 @@ export const useGastos = () => {
 
         try {
 
-            gastos.value = await api<Expense[]>('/expenses')
+            gastos.value = await api<Expense[]>('/api/expenses')
 
         } catch (err) {
             toast.add({
@@ -36,7 +36,7 @@ export const useGastos = () => {
 
         try {
 
-            gasto.value = await api<Expense>(`/expenses/${id}`)
+            gasto.value = await api<Expense>(`/api/expenses/${id}`)
 
         } catch (err) {
             toast.add({
@@ -56,7 +56,7 @@ export const useGastos = () => {
 
         try {
 
-            gastos.value = await api<Expense[]>('/expenses', {
+            gastos.value = await api<Expense[]>('/api/expenses', {
                 method: 'POST',
                 body: data
             })
@@ -86,7 +86,7 @@ export const useGastos = () => {
 
         try {
 
-            await api<Expense>(`/expenses/${id}`, {
+            await api<Expense>(`/api/expenses/${id}`, {
                 method: 'PUT',
                 body: data
             })
@@ -116,7 +116,7 @@ export const useGastos = () => {
 
         try {
 
-            gastos.value = await api<Expense[]>(`/expenses/${id}`, {
+            gastos.value = await api<Expense[]>(`/api/expenses/${id}`, {
                 method: 'DELETE'
             })
 

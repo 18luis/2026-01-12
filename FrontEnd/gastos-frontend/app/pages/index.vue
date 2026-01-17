@@ -4,8 +4,6 @@ import type { Expense } from "~/types/expense"
 
 const { gastos, loading, fetchGastos, deleteGasto } = useGastos()
 
-const search = ref('')
-const category = ref('')
 const showDeleteModal = ref(false)
 const selectedId = ref<number | null>(null)
 
@@ -22,21 +20,23 @@ const confirmDelete = () => {
 	showDeleteModal.value = false
 }
 
-const currentPage = ref(1)
-const totalPages = computed(() => Math.ceil(gastos.value.length / 5))
-const paginatedExpenses = computed(() => {
-	const start = (currentPage.value - 1) * 5
-	const end = start + 5
+const page = ref(1);
+const pageCount = ref(5);
+
+onMounted(fetchGastos)
+
+const paginatedRows = computed(() => {
+	if (!gastos.value.length) return []
+
+	const start = (page.value - 1) * pageCount.value
+	const end = start + pageCount.value
+
 	return gastos.value.slice(start, end)
 })
 
 watch(gastos, () => {
-	if (currentPage.value > totalPages.value) {
-		currentPage.value = totalPages.value || 1
-	}
+	page.value = 1
 })
-
-onMounted(fetchGastos)
 
 const columns: TableColumn<Expense>[] = [
 	{
@@ -82,8 +82,7 @@ const columns: TableColumn<Expense>[] = [
 				description="Agrega uno nuevo" />
 
 			<!-- Tabla -->
-			<UTable v-if="gastos.length > 0" :data="paginatedExpenses" :loading="loading" :columns="columns"
-				class="flex-1">
+			<UTable v-if="gastos.length > 0" :data="paginatedRows" :loading="loading" :columns="columns" class="flex-1">
 				<template #action-cell="{ row }">
 					<div class="flex gap-5">
 						<NuxtLink :to="`/gastos/edit/${row.original.id}`">
@@ -96,8 +95,8 @@ const columns: TableColumn<Expense>[] = [
 			</UTable>
 
 			<!-- Pagination -->
-			<div v-if="totalPages > 1" class="flex justify-center mt-6">
-				<UPagination v-model:page="currentPage" :total="totalPages" />
+			<div v-if="gastos.length > 5" class="flex justify-center mt-6">
+				<UPagination v-model:page="page" :sibling-count="1" :total="100" />
 			</div>
 
 			<ConfirmDelete v-model="showDeleteModal" @confirm="confirmDelete" />
